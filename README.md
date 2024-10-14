@@ -41,7 +41,12 @@ fn main() {
     }
     let _ = child.wait().expect("Java process wasn't running");
 }
+```
 
+# clone & build jar
+```bash
+git clone --recurse-submodules https://github.com/nek0us/cfr_stdin
+mvn package
 ```
 
 # CFR - Another Java Decompiler \o/
