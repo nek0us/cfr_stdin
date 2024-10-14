@@ -4,6 +4,7 @@ import org.benf.cfr.reader.api.CfrDriver;
 import org.benf.cfr.reader.api.ClassFileSource;
 import org.benf.cfr.reader.api.OutputSinkFactory;
 import org.benf.cfr.reader.apiunreleased.ClassFileSource2;
+import org.benf.cfr.reader.entities.ClassFile;
 import org.benf.cfr.reader.state.ClassFileSourceChained;
 import org.benf.cfr.reader.state.ClassFileSourceImpl;
 import org.benf.cfr.reader.state.ClassFileSourceWrapper;
@@ -78,5 +79,17 @@ public class CfrDriverImpl implements CfrDriver {
                 Driver.doClass(dcCommonState, path, skipInnerClass, dumperFactory);
             }
         }
+    }
+
+    @Override
+    public void analyse_bytes(byte[] toAnalyse) {
+        boolean skipInnerClass = options.getOption(OptionsImpl.SKIP_BATCH_INNER_CLASSES);
+        classFileSource.informAnalysisRelativePathDetail(null, null);
+        DCCommonState dcCommonState = new DCCommonState(options, classFileSource);
+        DumperFactory dumperFactory = outputSinkFactory != null ?
+                new SinkDumperFactory(outputSinkFactory, options) :
+                new InternalDumperFactoryImpl(options);
+        AnalysisType type = options.getOption(OptionsImpl.ANALYSE_AS);
+        Driver.doClass_bytes(dcCommonState, toAnalyse, skipInnerClass, dumperFactory);
     }
 }

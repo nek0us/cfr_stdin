@@ -1,3 +1,49 @@
+# STDIN
+```bash
+java -jar cfr.jar --stdin test
+# input ur .class bytes
+```
+rust eg:
+```rust
+use std::process::{Command, Stdio};
+use std::io::{BufRead, Write};
+use std::fs;
+use std::io::BufReader;
+
+fn main() {
+    let class_file_path = "BlackListConstant.class"; 
+    let class_file_bytes = fs::read(class_file_path).expect("Failed to read class file");
+
+    let class_name = "BlackListConstant.class"; 
+
+    let mut child = Command::new("java")
+        .arg("-jar")
+        .arg("cfr-0.153-SNAPSHOT-stdin.jar")
+        .arg("--stdin")
+        .arg(class_file_path) 
+        .stdin(Stdio::piped())   
+        .stdout(Stdio::piped())   
+        .spawn()
+        .expect("Failed to start java process");
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin.write_all(&class_file_bytes).expect("Failed to write to stdin");
+    }
+
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines() {
+            match line {
+                Ok(content) => println!("{}", content),
+                Err(e) => eprintln!("Error reading output: {}", e),
+            }
+        }
+    }
+    let _ = child.wait().expect("Java process wasn't running");
+}
+
+```
+
 # CFR - Another Java Decompiler \o/
 
 This is the public repository for the CFR decompiler, main site hosted at <a href="https://www.benf.org/other/cfr">benf.org/other/cfr</a>

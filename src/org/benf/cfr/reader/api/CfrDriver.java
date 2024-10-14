@@ -20,6 +20,8 @@ public interface CfrDriver {
      */
     void analyse(List<String> toAnalyse);
 
+    void analyse_bytes(byte[] toAnalyse);
+
     /**
      * Builder for {@link CfrDriver}
      *

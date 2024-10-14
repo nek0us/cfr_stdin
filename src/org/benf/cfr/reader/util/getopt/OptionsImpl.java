@@ -6,6 +6,8 @@ import org.benf.cfr.reader.util.ClassFileVersion;
 import org.benf.cfr.reader.util.StringUtils;
 import org.benf.cfr.reader.util.Troolean;
 import org.benf.cfr.reader.util.collections.ListFactory;
+import org.benf.cfr.reader.util.getopt.OptionsImpl.ExperimentalVersionSpecificDefaulter;
+import org.benf.cfr.reader.util.getopt.PermittedOptionProvider.ArgumentParam;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +16,9 @@ import java.util.Map;
 
 public class OptionsImpl implements Options {
     private final Map<String, String> opts;
+
+
+
 
     private static class DefaultingIntDecoder implements OptionDecoder<Integer> {
         final Integer defaultValue;
@@ -108,7 +113,11 @@ public class OptionsImpl implements Options {
 
     private static final OptionDecoder<Boolean> defaultTrueBooleanDecoder = new DefaultingBooleanDecoder(true);
 
+
     private static final OptionDecoder<Boolean> defaultFalseBooleanDecoder = new DefaultingBooleanDecoder(false);
+
+
+    
 
     private static class DefaultChainBooleanDecoder implements OptionDecoder<Boolean> {
 
@@ -415,6 +424,10 @@ public class OptionsImpl implements Options {
     public static final PermittedOptionProvider.Argument<Boolean> IGNORE_EXCEPTIONS_ALWAYS = register(new PermittedOptionProvider.Argument<Boolean>(
             "ignoreexceptionsalways", defaultFalseBooleanDecoder,
             "Drop exception information (WARNING : changes semantics, dangerous!)"));
+            public static final PermittedOptionProvider.Argument<Boolean> STDIN = register(new PermittedOptionProvider.Argument<Boolean>(
+                "stdin", defaultFalseBooleanDecoder,
+                "Use standard input as the class file content.", true));
+            
     public static final PermittedOptionProvider.Argument<Boolean> ANTI_OBF = register(new PermittedOptionProvider.Argument<Boolean>(
             "antiobf", defaultFalseBooleanDecoder,
             "Undo various obfuscations"));

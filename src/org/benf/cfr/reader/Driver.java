@@ -49,6 +49,66 @@ class Driver {
      *   mandates file names match declared names, but absolutely could happen when analysing randomly named class
      *   files in a junk directory.
      */
+    static void doClass_bytes(DCCommonState dcCommonState, byte[] classBytes, boolean skipInnerClass, DumperFactory dumperFactory) {
+        Options options = dcCommonState.getOptions();
+        ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
+        dcCommonState = new DCCommonState(dcCommonState, mapping);
+
+        IllegalIdentifierDump illegalIdentifierDump = IllegalIdentifierDump.Factory.get(options);
+        Dumper d = new ToStringDumper(); // sentinel dumper.
+        ExceptionDumper ed = dumperFactory.getExceptionDumper();
+        try {
+            SummaryDumper summaryDumper = new NopSummaryDumper();
+            ClassFile c = dcCommonState.getClassFileFromBytes(classBytes);
+            if (skipInnerClass && c.isInnerClass()) return;
+
+            dcCommonState.configureWith(c);
+            dumperFactory.getProgressDumper().analysingType(c.getClassType());
+
+            try {
+                c = dcCommonState.getClassFile(c.getClassType());
+            } catch (CannotLoadClassException ignore) {
+            }
+
+            if (options.getOption(OptionsImpl.DECOMPILE_INNER_CLASSES)) {
+                c.loadInnerClasses(dcCommonState);
+            }
+            if (options.getOption(OptionsImpl.RENAME_DUP_MEMBERS)) {
+                MemberNameResolver.resolveNames(dcCommonState, ListFactory.newList(dcCommonState.getClassCache().getLoadedTypes()));
+            }
+
+            TypeUsageCollectingDumper collectingDumper = new TypeUsageCollectingDumper(options, c);
+            c.analyseTop(dcCommonState, collectingDumper);
+
+            TypeUsageInformation typeUsageInformation = collectingDumper.getRealTypeUsageInformation();
+
+            d = dumperFactory.getNewTopLevelDumper(c.getClassType(), summaryDumper, typeUsageInformation, illegalIdentifierDump);
+            d = dcCommonState.getObfuscationMapping().wrap(d);
+            if (options.getOption(OptionsImpl.TRACK_BYTECODE_LOC)) {
+                d = dumperFactory.wrapLineNoDumper(d);
+            }
+
+            String methname = options.getOption(OptionsImpl.METHODNAME);
+            if (methname == null) {
+                c.dump(d);
+            } else {
+                try {
+                    for (Method method : c.getMethodByName(methname)) {
+                        method.dump(d, true);
+                    }
+                } catch (NoSuchMethodException e) {
+                    throw new IllegalArgumentException("No such method '" + methname + "'.");
+                }
+            }
+            d.print("");
+        } catch (Exception e) {
+            ed.noteException("aaa", null, e);
+        } finally {
+            if (d != null) d.close();
+        }
+    }
+
+
     static void doClass(DCCommonState dcCommonState, String path, boolean skipInnerClass, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();
         ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
@@ -110,6 +170,9 @@ class Driver {
             if (d != null) d.close();
         }
     }
+
+
+    
 
     static void doJar(DCCommonState dcCommonState, String path, AnalysisType analysisType, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();

@@ -219,6 +219,16 @@ public class DCCommonState {
         return getClassFile(ClassNameUtils.convertToPath(pathOrName) + ".class");
     }
 
+    public ClassFile getClassFileFromBytes(byte[] classBytes) throws CannotLoadClassException {
+        try {
+            ByteData data = new BaseByteData(classBytes);
+            return new ClassFile(data, "from_bytes", this);
+        } catch (Exception e) {
+            throw new CannotLoadClassException("Failed to load class from byte array.", e);
+        }
+    }
+    
+
 
     public ClassCache getClassCache() {
         return classCache;
